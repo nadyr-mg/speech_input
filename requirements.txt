@@ -1,0 +1,5 @@
+SpeechRecognition==3.8.1
+pyaudio==0.2.11
+google-cloud-speech==1.1.0
+google-api-python-client==1.7.9
+oauth2client==4.1.3
