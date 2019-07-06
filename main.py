@@ -3,7 +3,7 @@ from PyQt5.QtWidgets import *
 from uipyFiles.ui_speech_input import Ui_SpeechInput
 import speech_recognition as sr
 
-with open('google_credentials.json') as inp:
+with open('google_credentials.json', encoding='utf-8') as inp:
     GOOGLE_CLOUD_SPEECH_CREDENTIALS = inp.read()
 LANG_ENG = 'en-US'
 LANG_RUS = 'ru-RU'
