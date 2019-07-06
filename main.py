@@ -1,7 +1,10 @@
 import sys
-from PyQt5.QtWidgets import *
-from uipyFiles.ui_speech_input import Ui_SpeechInput
+
+import pyperclip
 import speech_recognition as sr
+from PyQt5.QtWidgets import *
+
+from uipyFiles.ui_speech_input import Ui_SpeechInput
 
 with open('google_credentials.json', encoding='utf-8') as inp:
     GOOGLE_CLOUD_SPEECH_CREDENTIALS = inp.read()
@@ -22,17 +25,27 @@ class SpeechInput(QWidget):
         self.uiautomat.setupUi(self)
 
         self.uiautomat.btn_start.clicked.connect(self.btn_start_clicked)
+        self.uiautomat.eng_enabled.setChecked(True)
 
         self.show()
 
     def btn_start_clicked(self):
-        lang = LANG_ENG if self.uiautomat.eng_enabled.isChecked() else LANG_RUS
+        self.uiautomat.btn_start.setText('Listening...')
+        self.uiautomat.btn_start.repaint()
+
+        lang = LANG_RUS if self.uiautomat.rus_enabled.isChecked() else LANG_ENG
         with sr.Microphone() as source:
             audio = self.recognizer.listen(source)
             res = self.recognize(audio, language=lang)
 
+        if res:
+            pyperclip.copy(res)
+
         res = "Couldn't recognize" if not res else res
         self.uiautomat.text_output.setPlainText(res)
+
+        self.uiautomat.btn_start.setText('Record')
+        self.uiautomat.btn_start.repaint()
 
     def recognize(self, audio, language=LANG_ENG):
         text = None
@@ -53,16 +66,3 @@ if __name__ == '__main__':
     window = SpeechInput()
 
     sys.exit(app.exec_())
-
-"""
-with sr.Microphone() as source:
-    r.adjust_for_ambient_noise(source)
-    print(r.energy_threshold)
-
-    print('Say smth')
-
-    audio = r.listen(source)
-
-    a = recognize(audio, language=LANG_ENG)
-    print(a)
-"""
