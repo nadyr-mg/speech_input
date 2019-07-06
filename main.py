@@ -1,6 +1,6 @@
 import sys
 from PyQt5.QtWidgets import *
-from uipyFiles.uiautomat import Ui_Automat
+from uipyFiles.ui_speech_input import Ui_SpeechInput
 import speech_recognition as sr
 
 with open('google_credentials.json') as inp:
@@ -18,7 +18,7 @@ class SpeechInput(QWidget):
         with sr.Microphone() as source:
             self.recognizer.adjust_for_ambient_noise(source)
 
-        self.uiautomat = Ui_Automat()
+        self.uiautomat = Ui_SpeechInput()
         self.uiautomat.setupUi(self)
 
         self.uiautomat.btn_start.clicked.connect(self.btn_start_clicked)
@@ -26,7 +26,13 @@ class SpeechInput(QWidget):
         self.show()
 
     def btn_start_clicked(self):
-        pass
+        lang = LANG_ENG if self.uiautomat.eng_enabled.isChecked() else LANG_RUS
+        with sr.Microphone() as source:
+            audio = self.recognizer.listen(source)
+            res = self.recognize(audio, language=lang)
+
+        res = "Couldn't recognize" if not res else res
+        self.uiautomat.text_output.setPlainText(res)
 
     def recognize(self, audio, language=LANG_ENG):
         text = None
