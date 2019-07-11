@@ -25,7 +25,7 @@ class SpeechInput(QWidget):
     def __init__(self):
         super(SpeechInput, self).__init__()
 
-        self.recognizer = sr.Recognizer()
+        self.recognizer = sr.Recognizer(15)
 
         # with sr.Microphone() as source:
         #    self.recognizer.adjust_for_ambient_noise(source)
