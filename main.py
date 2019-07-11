@@ -1,5 +1,6 @@
 import sys
 import os
+from time import sleep
 
 import pyperclip
 import speech_recognition as sr
@@ -40,17 +41,19 @@ class SpeechInput(QWidget):
         self.show()
 
     def btn_start_clicked(self):
-        self.uiautomat.btn_start.setText('Listening...')
-        self.uiautomat.btn_start.repaint()
-        # self.showNormal()
-        # self.showMinimized()
-
         lang = LANG_RUS if self.uiautomat.rus_enabled.isChecked() else LANG_ENG
-        with sr.Microphone() as source:
-            audio = self.recognizer.listen(source)
 
-        self.uiautomat.btn_start.setText('Analyzing...')
-        self.uiautomat.btn_start.repaint()
+        with sr.Microphone() as source:
+            self.uiautomat.btn_start.setText('Listening...')
+            self.uiautomat.btn_start.repaint()
+
+            audio = self.recognizer.listen(source, timeout=15)
+
+        # self.uiautomat.btn_start.setText('Analyzing...')
+        # self.uiautomat.btn_start.repaint()
+
+        self.showMinimized()
+
         flag = True
         if flag:
             res = self.recognize2(audio, lang)
