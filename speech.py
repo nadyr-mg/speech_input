@@ -12,12 +12,31 @@ import googleapiclient.errors
 from uipyFiles.ui_speech_input import Ui_SpeechInput
 import base64
 import googleapiclient.http
+import os
+import json
+from subprocess import run
 
 with open('google_credentials.json', encoding='utf-8') as inp:
     api_credentials = GoogleCredentials.from_stream(inp.name)
 
 LANG_ENG = 'en-US'
 LANG_RUS = 'ru-RU'
+
+cmd = 'nircmd.exe setsysvolume {} default_record'
+
+config_dir = r'C:\Users\Andrew\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup'
+
+with open(os.path.join(config_dir, 'voice.json'), encoding='utf-8') as inp:
+    config = json.load(inp)
+
+MAX_VOLUME = 65536
+
+
+def set_volume(cur_volume):
+    val = int((MAX_VOLUME * cur_volume) / 100)
+
+    cmd1 = cmd.format(val)
+    run(cmd1, shell=True)
 
 
 class SpeechInput(QWidget):
@@ -47,6 +66,7 @@ class SpeechInput(QWidget):
             self.uiautomat.btn_start.setText('Listening...')
             self.uiautomat.btn_start.repaint()
 
+            set_volume(config['google'])
             audio = self.recognizer.listen(source, timeout=15)
 
         # self.uiautomat.btn_start.setText('Analyzing...')
@@ -58,6 +78,8 @@ class SpeechInput(QWidget):
         if res:
             pyperclip.copy(res)
             send_keys('^v')
+
+        set_volume(config['voice'])
 
         res = "Couldn't recognize" if not res else res
         self.uiautomat.text_output.setPlainText(res)
@@ -91,6 +113,14 @@ class SpeechInput(QWidget):
             transcript += result["alternatives"][0]["transcript"].strip() + " "
 
         return transcript
+
+    def closeEvent(self, evnt):
+        buttonReply = QMessageBox.question(self, 'Confirmation', "Do you want to Exit?",
+                                           QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+        if buttonReply == QMessageBox.Yes:
+            evnt.accept()
+        else:
+            evnt.ignore()
 
 
 if __name__ == '__main__':
