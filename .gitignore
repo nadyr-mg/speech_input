@@ -1,3 +1,5 @@
 venv
+build
+*.spec
 google_credentials.json
 .idea
