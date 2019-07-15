@@ -24,7 +24,7 @@ LANG_RUS = 'ru-RU'
 
 cmd = 'nircmd.exe setsysvolume {} default_record'
 
-config_dir = r'C:\Users\Andrew\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup'
+config_dir = r'C:\Users\Andrew\Documents'
 
 with open(os.path.join(config_dir, 'voice.json'), encoding='utf-8') as inp:
     config = json.load(inp)
