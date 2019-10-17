@@ -263,7 +263,7 @@ def main():
         max_alternatives=1)
     streaming_config = speech.types.StreamingRecognitionConfig(
         config=config,
-        interim_results=False)
+        interim_results=True)  # FIXME
 
     mic_manager = ResumableMicrophoneStream(SAMPLE_RATE, CHUNK_SIZE)
     print(mic_manager.chunk_size)
