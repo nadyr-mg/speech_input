@@ -169,7 +169,7 @@ class ResumableMicrophoneStream:
 
 
 def handle_commands(transcript):
-    if re.search(r'\bselect_all\b', transcript, re.I):
+    if re.search(r'\bselect all\b', transcript, re.I):
         send_keys('^a')
     elif transcript:
         pyperclip.copy(transcript)

@@ -21,7 +21,7 @@ protobuf==3.10.0
 pyasn1==0.4.7
 pyasn1-modules==0.2.7
 PyAudio==0.2.11
-PyInstaller==3.5
+git+https://github.com/Loran425/pyinstaller
 pyperclip==1.7.0
 PyQt5==5.11.3
 PyQt5-sip==4.19.19

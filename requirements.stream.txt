@@ -1,0 +1,5 @@
+PyAudio==0.2.11
+pyperclip==1.7.0
+pywinauto==0.6.7
+google-cloud-speech==1.2.0
+six==1.12.0
