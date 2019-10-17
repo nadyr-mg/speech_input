@@ -31,14 +31,19 @@ import os
 import time
 import re
 import sys
+import pyperclip
+from pywinauto.keyboard import send_keys
 
 # uses result_end_time currently only avaialble in v1p1beta, will be in v1 soon
 from google.cloud import speech_v1p1beta1 as speech
 import pyaudio
 from six.moves import queue
 
-with open('google_credentials.json') as inp:
-    cred = os.path.realpath(inp.name)
+LANG_ENG = 'en-US'
+LANG_RUS = 'ru-RU'
+
+cred = r'C:\Users\Andrew\Documents\google_credentials.json'
+
 # Audio recording parameters
 STREAMING_LIMIT = 10000
 SAMPLE_RATE = 16000
@@ -130,7 +135,7 @@ class ResumableMicrophoneStream:
                                             self.bridging_offset) / chunk_time)
 
                     self.bridging_offset = (round((
-                        len(self.last_audio_input) - chunks_from_ms)
+                                                          len(self.last_audio_input) - chunks_from_ms)
                                                   * chunk_time))
 
                     for i in range(chunks_from_ms, len(self.last_audio_input)):
@@ -161,6 +166,14 @@ class ResumableMicrophoneStream:
                     break
 
             yield b''.join(data)
+
+
+def handle_commands(transcript):
+    if re.search(r'\bselect_all\b', transcript, re.I):
+        send_keys('^a')
+    elif transcript:
+        pyperclip.copy(transcript)
+        # send_keys('^v')
 
 
 def listen_print_loop(responses, stream):
@@ -229,6 +242,8 @@ def listen_print_loop(responses, stream):
                 stream.closed = True
                 break
 
+            handle_commands(transcript)
+
         else:
             sys.stdout.write(RED)
             sys.stdout.write('\033[K')
@@ -248,7 +263,7 @@ def main():
         max_alternatives=1)
     streaming_config = speech.types.StreamingRecognitionConfig(
         config=config,
-        interim_results=True)
+        interim_results=False)
 
     mic_manager = ResumableMicrophoneStream(SAMPLE_RATE, CHUNK_SIZE)
     print(mic_manager.chunk_size)
@@ -268,7 +283,7 @@ def main():
             audio_generator = stream.generator()
 
             requests = (speech.types.StreamingRecognizeRequest(
-                audio_content=content)for content in audio_generator)
+                audio_content=content) for content in audio_generator)
 
             responses = client.streaming_recognize(streaming_config,
                                                    requests)
@@ -290,7 +305,6 @@ def main():
 
 
 if __name__ == '__main__':
-
     main()
 
 # [END speech_transcribe_infinite_streaming]
