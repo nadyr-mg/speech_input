@@ -33,6 +33,7 @@ import re
 import sys
 import pyperclip
 from pywinauto.keyboard import send_keys
+import win32clipboard
 
 # uses result_end_time currently only avaialble in v1p1beta, will be in v1 soon
 from google.cloud import speech_v1p1beta1 as speech
@@ -168,12 +169,26 @@ class ResumableMicrophoneStream:
             yield b''.join(data)
 
 
+def search(command, transcript):
+    return re.search(r'\b{}\b'.format(command), transcript, re.I)
+
+
 def handle_commands(transcript):
-    if re.search(r'\bselect all\b', transcript, re.I):
+    if search('select all', transcript):
         send_keys('^a')
+
     elif transcript:
+        pyperclip.copy('')
+        send_keys('^a^c')
+
+        prev_text = pyperclip.paste()
+
+        if prev_text:
+            prev_text += ' '
+        transcript = prev_text + transcript
+
         pyperclip.copy(transcript)
-        # send_keys('^v')
+        send_keys('^v')
 
 
 def listen_print_loop(responses, stream):
@@ -220,16 +235,16 @@ def listen_print_loop(responses, stream):
         stream.result_end_time = int((result_seconds * 1000)
                                      + (result_nanos / 1000000))
 
-        corrected_time = (stream.result_end_time - stream.bridging_offset
-                          + (STREAMING_LIMIT * stream.restart_counter))
+        # corrected_time = (stream.result_end_time - stream.bridging_offset
+        #                   + (STREAMING_LIMIT * stream.restart_counter))
         # Display interim results, but with a carriage return at the end of the
         # line, so subsequent lines will overwrite them.
 
         if result.is_final:
 
-            sys.stdout.write(GREEN)
-            sys.stdout.write('\033[K')
-            sys.stdout.write(str(corrected_time) + ': ' + transcript + '\n')
+            # sys.stdout.write(GREEN)
+            # sys.stdout.write('\033[K')
+            # sys.stdout.write(str(corrected_time) + ': ' + transcript + '\n')
 
             stream.is_final_end_time = stream.result_end_time
             stream.last_transcript_was_final = True
@@ -237,17 +252,17 @@ def listen_print_loop(responses, stream):
             # Exit recognition if any of the transcribed phrases could be
             # one of our keywords.
             if re.search(r'\b(exit|quit)\b', transcript, re.I):
-                sys.stdout.write(YELLOW)
-                sys.stdout.write('Exiting...\n')
+                # sys.stdout.write(YELLOW)
+                # sys.stdout.write('Exiting...\n')
                 stream.closed = True
                 break
 
             handle_commands(transcript)
 
         else:
-            sys.stdout.write(RED)
-            sys.stdout.write('\033[K')
-            sys.stdout.write(str(corrected_time) + ': ' + transcript + '\r')
+            # sys.stdout.write(RED)
+            # sys.stdout.write('\033[K')
+            # sys.stdout.write(str(corrected_time) + ': ' + transcript + '\r')
 
             stream.last_transcript_was_final = False
 
@@ -266,18 +281,18 @@ def main():
         interim_results=True)  # FIXME
 
     mic_manager = ResumableMicrophoneStream(SAMPLE_RATE, CHUNK_SIZE)
-    print(mic_manager.chunk_size)
-    sys.stdout.write(YELLOW)
-    sys.stdout.write('\nListening, say "Quit" or "Exit" to stop.\n\n')
-    sys.stdout.write('End (ms)       Transcript Results/Status\n')
-    sys.stdout.write('=====================================================\n')
+    # print(mic_manager.chunk_size)
+    # sys.stdout.write(YELLOW)
+    # sys.stdout.write('\nListening, say "Quit" or "Exit" to stop.\n\n')
+    # sys.stdout.write('End (ms)       Transcript Results/Status\n')
+    # sys.stdout.write('=====================================================\n')
 
     with mic_manager as stream:
 
         while not stream.closed:
-            sys.stdout.write(YELLOW)
-            sys.stdout.write('\n' + str(
-                STREAMING_LIMIT * stream.restart_counter) + ': NEW REQUEST\n')
+            # sys.stdout.write(YELLOW)
+            # sys.stdout.write('\n' + str(
+            #     STREAMING_LIMIT * stream.restart_counter) + ': NEW REQUEST\n')
 
             stream.audio_input = []
             audio_generator = stream.generator()
@@ -299,8 +314,8 @@ def main():
             stream.audio_input = []
             stream.restart_counter = stream.restart_counter + 1
 
-            if not stream.last_transcript_was_final:
-                sys.stdout.write('\n')
+            # if not stream.last_transcript_was_final:
+            #     sys.stdout.write('\n')
             stream.new_stream = True
 
 
