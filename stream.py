@@ -268,23 +268,43 @@ def listen_print_loop(responses, stream):
             stream.last_transcript_was_final = False
 
 
-def recognize_local_file(filename):
-    client = speech_v1.SpeechClient.from_service_account_file(cred)
-    config = {
-        "language_code": "en-US",
-        "sample_rate_hertz": SAMPLE_RATE,
-        "encoding": speech_v1.enums.RecognitionConfig.AudioEncoding.LINEAR16,
-        "max_alternatives": 1
-    }
-    with io.open(filename, "rb") as f:
-        content = f.read()
-    audio = {"content": content}
+def transcribe_streaming(stream_file):
+    """Streams transcription of the given audio file."""
+    client = speech.SpeechClient.from_service_account_file(cred)
+    config = speech.types.RecognitionConfig(
+        encoding=speech.enums.RecognitionConfig.AudioEncoding.LINEAR16,
+        sample_rate_hertz=SAMPLE_RATE,
+        language_code='en-US',
+        max_alternatives=1)
+    streaming_config = speech.types.StreamingRecognitionConfig(
+        config=config,
+        interim_results=True)  # FIXME
 
-    response = client.recognize(config, audio)
-    for result in response.results:
-        # First alternative is the most probable result
-        alternative = result.alternatives[0]
-        print(f"transcript: {alternative.transcript}\nconfidence: {alternative.confidence}")
+    with io.open(stream_file, 'rb') as audio_file:
+        content = audio_file.read()
+
+    # In practice, stream should be a generator yielding chunks of audio data.
+    stream = [content]
+    requests = (speech.types.StreamingRecognizeRequest(audio_content=chunk)
+                for chunk in stream)
+
+    # streaming_recognize returns a generator.
+    responses = client.streaming_recognize(streaming_config, requests)
+
+    for response in responses:
+        # Once the transcription has settled, the first result will contain the
+        # is_final result. The other results will be for subsequent portions of
+        # the audio.
+        for result in response.results:
+            alternative = result.alternatives[0]
+            if alternative.confidence < 0.1:
+                continue
+
+            print('Finished: {}'.format(result.is_final))
+            print('Stability: {}'.format(result.stability))
+            print('Confidence: {}'.format(alternative.confidence))
+            print(u'Transcript: {}'.format(alternative.transcript))
+            print()
 
 
 def main():
@@ -341,6 +361,6 @@ def main():
 
 if __name__ == '__main__':
     main()
-    # recognize_local_file('sample.wav')
+    # transcribe_streaming('sample.wav')
 
 # [END speech_transcribe_infinite_streaming]
