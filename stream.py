@@ -27,18 +27,19 @@ Example usage:
 """
 
 # [START speech_transcribe_infinite_streaming]
-import os
-import time
+import io
 import re
-import sys
-import pyperclip
-from pywinauto.keyboard import send_keys
-import win32clipboard
+import time
 
+import pyaudio
+import pyperclip
+from google.cloud import speech_v1
 # uses result_end_time currently only avaialble in v1p1beta, will be in v1 soon
 from google.cloud import speech_v1p1beta1 as speech
-import pyaudio
 from six.moves import queue
+
+from pywinauto.keyboard import send_keys
+import win32clipboard
 
 LANG_ENG = 'en-US'
 LANG_RUS = 'ru-RU'
@@ -267,6 +268,25 @@ def listen_print_loop(responses, stream):
             stream.last_transcript_was_final = False
 
 
+def recognize_local_file(filename):
+    client = speech_v1.SpeechClient.from_service_account_file(cred)
+    config = {
+        "language_code": "en-US",
+        "sample_rate_hertz": SAMPLE_RATE,
+        "encoding": speech_v1.enums.RecognitionConfig.AudioEncoding.LINEAR16,
+        "max_alternatives": 1
+    }
+    with io.open(filename, "rb") as f:
+        content = f.read()
+    audio = {"content": content}
+
+    response = client.recognize(config, audio)
+    for result in response.results:
+        # First alternative is the most probable result
+        alternative = result.alternatives[0]
+        print(f"transcript: {alternative.transcript}\nconfidence: {alternative.confidence}")
+
+
 def main():
     """start bidirectional streaming from microphone input to speech API"""
 
@@ -321,5 +341,6 @@ def main():
 
 if __name__ == '__main__':
     main()
+    # recognize_local_file('sample.wav')
 
 # [END speech_transcribe_infinite_streaming]
